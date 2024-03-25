@@ -1,74 +1,79 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 import 'package:providerdemo/model/model.dart';
-import 'package:providerdemo/provider/getmth/getdemo.dart'; // Import your ClassData provider
+import 'package:providerdemo/provider/provider.dart';
 
-class UpdatePostScreen extends StatefulWidget {
-  final SignUpBody post;
-  final int index;
+class UpdatePage extends StatelessWidget {
+  final String id;
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
 
-  UpdatePostScreen({required this.post, required this.index});
-
-  @override
-  _UpdatePostScreenState createState() => _UpdatePostScreenState();
-}
-
-class _UpdatePostScreenState extends State<UpdatePostScreen> {
-  late TextEditingController _nameController;
-  late TextEditingController _emailController;
-
-  @override
-  void initState() {
-    super.initState();
-    // Initialize text controllers with current post data
-    _nameController = TextEditingController(text: widget.post.name);
-    _emailController = TextEditingController(text: widget.post.email);
-  }
-
-  @override
-  void dispose() {
-    // Dispose text controllers
-    _nameController.dispose();
-    _emailController.dispose();
-    super.dispose();
-  }
+  UpdatePage({required this.id});
 
   @override
   Widget build(BuildContext context) {
+    final dataClassprovider = Provider.of<DataClassprovider>(context);
+
+    // Find the data by ID
+    final posts = dataClassprovider.getdataById(id);
+
+    // Set initial values for text controllers
+    nameController.text = posts?.name ?? '';
+    passwordController.text = posts?.password ?? '';
+    phoneController.text = posts?.phone ?? '';
+    emailController.text = posts?.email ?? '';
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Update Post'),
+        title: Text('Update'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: _nameController,
-              decoration: InputDecoration(labelText: 'Name'),
-            ),
-            SizedBox(height: 20),
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(labelText: 'Email'),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                // Update post data and pop the screen
-                SignUpBody updatedPost = SignUpBody(
-                  name: _nameController.text,
-                  phone: widget.post.phone, // Keep phone same as original
-                  email: _emailController.text,
-                  password: widget.post.password, // Keep password same as original
-                );
-                Provider.of<ClassData>(context, listen: false).updatePost(widget.index, updatedPost);
-                Navigator.pop(context);
-              },
-              child: Text('Update'),
-            ),
-          ],
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextFormField(
+                controller: nameController,
+                decoration: InputDecoration(labelText: 'Name'),
+              ),
+              TextFormField(
+                controller: passwordController,
+                decoration: InputDecoration(labelText: 'Password'),
+              ),
+              TextFormField(
+                controller: phoneController,
+                decoration: InputDecoration(labelText: 'phone'),
+              ),
+              TextFormField(
+                controller: emailController,
+                decoration: InputDecoration(labelText: 'email'),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () async {
+                  // Construct the update body
+                  SignUpBody updateDataBody = SignUpBody(
+                    name: nameController.text,
+                    password: passwordController.text,
+                    id: id,
+                    phone: phoneController.text,
+                    email: emailController.text,
+                  );
+        
+                  // Call the update method
+                  await dataClassprovider.updateBook(id, updateDataBody);
+                  // Navigate back to previous screen
+                  Navigator.pop(context);
+                },
+                child: Text('Update'),
+              ),
+            ],
+          ),
         ),
       ),
     );
